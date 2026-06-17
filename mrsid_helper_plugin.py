@@ -56,7 +56,7 @@ class MrSIDHelperPlugin:
     def download_and_install(self):
         # GitHub URL for the installer
         # Replace this URL with your actual GitHub release URL
-        url = "https://github.com/geowgs84/qgis-mrsid-macos/releases/latest/download/MrSID-QGIS-Installer.pkg"
+        url = "https://github.com/satyamgeo/qgis-mrsid-macos/releases/latest/download/MrSID-QGIS-Installer.pkg"
         pkg_path = "/tmp/MrSID-QGIS-Installer.pkg"
 
         # Show progress dialog
