@@ -1,0 +1,14 @@
+[general]
+name=Mac MrSID Support Helper
+qgisMinimumVersion=3.0
+qgisMaximumVersion=3.99
+description=Helper to download and install MrSID (.sid) raster file format support on macOS.
+version=1.0.0
+author=Satyam
+email=satyam@example.com
+about=This plugin checks if MrSID support is active in QGIS on macOS. If not, it helps you download and run the MrSID package installer to enable .sid support natively.
+tracker=https://github.com/geowgs84/qgis-mrsid-macos/issues
+repository=https://github.com/geowgs84/qgis-mrsid-macos
+tags=mrsid, gdal, sid, macos
+category=Raster
+icon=icon.png
