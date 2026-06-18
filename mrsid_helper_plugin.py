@@ -54,10 +54,24 @@ class MrSIDHelperPlugin:
             self.download_and_install()
 
     def download_and_install(self):
+        import tempfile
+        import subprocess
+
         # GitHub URL for the installer
         # Replace this URL with your actual GitHub release URL
         url = "https://github.com/satyamgeo/qgis-mrsid-macos/releases/latest/download/MrSID-QGIS-Installer.pkg"
-        pkg_path = "/tmp/MrSID-QGIS-Installer.pkg"
+        
+        # Securely get the system temp directory path
+        pkg_path = os.path.join(tempfile.gettempdir(), "MrSID-QGIS-Installer.pkg")
+
+        # Validate URL scheme to prevent arbitrary local file reading/execution
+        if not (url.startswith("http://") or url.startswith("https://")):
+            QMessageBox.critical(
+                self.iface.mainWindow(),
+                "Security Error",
+                "Invalid URL scheme detected. Only HTTP and HTTPS are permitted."
+            )
+            return
 
         # Show progress dialog
         progress = QProgressDialog(
@@ -102,13 +116,16 @@ class MrSIDHelperPlugin:
             "The installer will now launch. macOS will ask for your administrator password to copy the plugin files and re-sign QGIS."
         )
 
-        cmd = (
-            "osascript -e '"
-            "do shell script \"installer -pkg " + pkg_path + " -target /\" "
-            "with administrator privileges'"
-        )
+        # Run the installer securely using subprocess without a shell
+        script = f'do shell script "installer -pkg \\"{pkg_path}\\" -target /" with administrator privileges'
+        cmd = ["osascript", "-e", script]
 
-        exit_code = os.system(cmd)
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            exit_code = result.returncode
+        except Exception as e:
+            print(f"Error running installer: {e}")
+            exit_code = -1
 
         if exit_code == 0:
             QMessageBox.information(
