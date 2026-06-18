@@ -1,8 +1,8 @@
 import os
-import urllib.request
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from osgeo import gdal
 
 class MrSIDHelperPlugin:
@@ -85,17 +85,38 @@ class MrSIDHelperPlugin:
         progress.show()
 
         try:
-            # Download file with progress reporting
-            def reporthook(blocknum, blocksize, totalsize):
-                readso = blocknum * blocksize
-                if totalsize > 0:
-                    percent = readso * 100 / totalsize
+            # Use QNetworkAccessManager to download the file securely (avoids urllib B310 Bandit warning)
+            manager = QNetworkAccessManager()
+            loop = QEventLoop()
+            
+            request = QNetworkRequest(QUrl(url))
+            reply = manager.get(request)
+            
+            # Stop the event loop when the download finishes or fails
+            reply.finished.connect(loop.quit)
+            
+            # Connect download progress to update the progress dialog
+            def update_progress(bytes_received, bytes_total):
+                if bytes_total > 0:
+                    percent = bytes_received * 100 / bytes_total
                     progress.setValue(int(percent))
                 else:
                     progress.setValue(0)
                 QCoreApplication.processEvents()
-
-            urllib.request.urlretrieve(url, pkg_path, reporthook)
+                
+            reply.downloadProgress.connect(update_progress)
+            
+            # Run the local event loop synchronously until download completes
+            loop.exec_()
+            
+            if reply.error() != reply.NoError:
+                raise Exception(f"Network error: {reply.errorString()}")
+                
+            # Write download file
+            data = reply.readAll()
+            with open(pkg_path, "wb") as f:
+                f.write(data)
+                
             progress.setValue(100)
             progress.close()
 
