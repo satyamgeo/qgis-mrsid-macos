@@ -20,11 +20,11 @@ class MrSIDHelperPlugin:
         )
         self.action.triggered.connect(self.run)
         self.iface.addToolBarIcon(self.action)
-        self.iface.addRasterMenuToolBarIcon(self.action)
+        self.iface.addRasterToolBarIcon(self.action)
 
     def unload(self):
         # Clean up GUI
-        self.iface.removeRasterMenuToolBarIcon(self.action)
+        self.iface.removeRasterToolBarIcon(self.action)
         self.iface.removeToolBarIcon(self.action)
 
     def check_mrsid_support(self):
