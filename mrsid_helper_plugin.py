@@ -30,6 +30,49 @@ class MrSIDHelperPlugin:
     def __init__(self, iface):
         self.iface = iface
         self.action = None
+        self.setup_gdal_driver_path()
+
+    def setup_gdal_driver_path(self):
+        try:
+            from qgis.core import QgsSettings
+            settings = QgsSettings()
+            
+            # Enable custom environment variables
+            settings.setValue("qgis/customEnvVarsUse", True)
+            
+            target_path = "/Library/Application Support/MrSID-QGIS/gdalplugins"
+            expected_entry = f"prepend|GDAL_DRIVER_PATH={target_path}"
+            
+            # Read existing variables (default to list type)
+            vars_list = settings.value("qgis/customEnvVars", [])
+            if not isinstance(vars_list, list):
+                vars_list = [vars_list] if vars_list else []
+            
+            found = False
+            new_vars = []
+            for item in vars_list:
+                item_str = str(item)
+                if "GDAL_DRIVER_PATH=" in item_str:
+                    if target_path in item_str:
+                        # Already configured correctly
+                        found = True
+                        new_vars.append(item_str)
+                    else:
+                        # There is an existing GDAL_DRIVER_PATH, prepend ours
+                        parts = item_str.split("=", 1)
+                        action_var = parts[0]
+                        val = parts[1]
+                        new_vars.append(f"{action_var}={target_path}:{val}")
+                        found = True
+                else:
+                    new_vars.append(item_str)
+            
+            if not found:
+                new_vars.append(expected_entry)
+                
+            settings.setValue("qgis/customEnvVars", new_vars)
+        except Exception as e:
+            print(f"[MrSID Helper] Error setting customEnvVars: {e}")
 
     def initGui(self):
         icon_path = os.path.join(os.path.dirname(__file__), 'icon.png')
